@@ -1,6 +1,16 @@
+"use client";
+
 import GuessPlayerQuiz from "@/components/GuessPlayer";
+import { useGetTeamData } from "@/api/query";
 
 export default function GuessThePlayerPage() {
+  const { data, isLoading, error } = useGetTeamData();
+  console.log(data);
+
+  if (error) {
+    return <div>Error loading data.</div>;
+  }
+
   return (
     <div className="my-auto flex flex-col items-center justify-center gap-12">
       <div className="mx-auto w-full max-w-2xl text-center text-3xl font-bold tracking-wide">
@@ -12,7 +22,7 @@ export default function GuessThePlayerPage() {
           and see how many stars you can identify.
         </p>
       </div>
-      <GuessPlayerQuiz />
+      {!isLoading && data && <GuessPlayerQuiz data={data} />}
     </div>
   );
 }
