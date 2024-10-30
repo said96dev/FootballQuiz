@@ -5,7 +5,6 @@ import { useGetTeamData } from "@/api/query";
 
 export default function GuessThePlayerPage() {
   const { data, isLoading, error } = useGetTeamData();
-  console.log(data);
 
   if (error) {
     return <div>Error loading data.</div>;
@@ -18,8 +17,8 @@ export default function GuessThePlayerPage() {
           Test Your Football Knowledge!
         </span>
         <p className="mt-4 text-lg font-light">
-          Can you guess the player from Europe's top clubs? Challenge yourself
-          and see how many stars you can identify.
+          Can you guess the player from Europe&#39;s top clubs? Challenge
+          yourself and see how many stars you can identify.
         </p>
       </div>
       {!isLoading && data && <GuessPlayerQuiz data={data} />}
