@@ -16,67 +16,59 @@ import Confetti from "react-confetti";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
-const API_KEY = "2710688779c7d26454b430483ba0c60a";
+const API_KEY = "3bd124bdc6msh2c0a3685a39e8f2p16f5d7jsnf166efa981b4"; // Replace with your actual RapidAPI key
 
 const TEAM_IDS = {
-  "Manchester City": 50,
-  "Manchester United": 33,
+  "Manchester City": 17,
+  "Manchester United": 35,
   Arsenal: 42,
-  Chelsea: 49,
-  Tottenham: 47,
-  Barcelona: 529,
-  "Real Madrid": 541,
-  "Inter Milan": 505,
-  PSG: 85,
-  "Bayern Munich": 157,
+  Chelsea: 38,
+  Tottenham: 33,
+  Barcelona: 2817,
+  "Real Madrid": 2829,
+  "Inter Milan": 2697,
+  PSG: 1644,
+  "Bayern Munich": 2672,
 };
 
 interface Player {
   id: number;
   name: string;
-  firstname: string;
-  lastname: string;
-  age: number;
-  birth: {
-    date: string;
-    place: string;
-    country: string;
-  };
-  nationality: string;
-  height: string;
-  weight: string;
-  photo: string;
+  shortName: string;
   position: string;
+  jerseyNumber: string;
+  height: number;
+  preferredFoot: string;
+  dateOfBirthTimestamp: number;
+  country: {
+    name: string;
+  };
   team: {
     name: string;
-    logo: string;
-  };
-  statistics: {
-    games: {
-      appearences: number;
-      minutes: number;
-    };
-    goals: {
-      total: number;
-      assists: number;
-    };
   };
 }
 
 export default function ExtendedEuropeanFootballQuiz() {
   const [players, setPlayers] = useState<Player[]>([]);
-  const [unusedPlayers, setUnusedPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [options, setOptions] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [shake, setShake] = useState(false);
+  const [usedPlayers, setUsedPlayers] = useState<Set<number>>(new Set()); // Set to track used players
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPlayers();
   }, []);
+  const POSITION_MAP: { [key: string]: string } = {
+    F: "Forward",
+    M: "Midfielder",
+    D: "Defender",
+    G: "Goalkeeper",
+    // Füge hier weitere Abkürzungen hinzu, falls vorhanden
+  };
 
   const fetchPlayers = async () => {
     setLoading(true);
@@ -84,50 +76,41 @@ export default function ExtendedEuropeanFootballQuiz() {
       const allPlayers: Player[] = [];
       for (const [teamName, teamId] of Object.entries(TEAM_IDS)) {
         const response = await fetch(
-          `https://v3.football.api-sports.io/players?team=${teamId}&season=2022`,
+          `https://sofascore.p.rapidapi.com/teams/get-squad?teamId=${teamId}`,
           {
             method: "GET",
             headers: {
-              "x-apisports-key": API_KEY,
+              "X-RapidAPI-Key": API_KEY,
+              "X-RapidAPI-Host": "sofascore.p.rapidapi.com",
             },
           },
         );
         const data = await response.json();
-        const teamPlayers = data.response
-          .filter(
-            (playerData: any) => playerData.statistics[0].games.minutes >= 10,
-          )
-          .map((playerData: any) => ({
-            id: playerData.player.id,
-            name: playerData.player.name,
-            firstname: playerData.player.firstname,
-            lastname: playerData.player.lastname,
-            age: playerData.player.age,
-            birth: playerData.player.birth,
-            nationality: playerData.player.nationality,
-            height: playerData.player.height,
-            weight: playerData.player.weight,
-            photo: playerData.player.photo,
-            position: playerData.statistics[0].games.position,
-            team: {
-              name: teamName,
-              logo: playerData.statistics[0].team.logo,
-            },
-            statistics: {
-              games: {
-                appearences: playerData.statistics[0].games.appearences,
-                minutes: playerData.statistics[0].games.minutes,
+        const teamPlayers = data.players
+          .filter((playerData: any) => playerData.player.position !== "G")
+          .map((playerData: any) => {
+            const position = playerData.player.position || "Unknown";
+            const fullPosition = POSITION_MAP[position] || position; // Mapping zur vollständigen Position
+            return {
+              id: playerData.player.id || 0,
+              name: playerData.player.name || "Unknown",
+              shortName: playerData.player.shortName || "Unknown",
+              position: fullPosition, // Setze die vollständige Position
+              jerseyNumber: playerData.player.jerseyNumber || "N/A",
+              height: playerData.player.height || 0,
+              preferredFoot: playerData.player.preferredFoot || "Unknown",
+              dateOfBirthTimestamp: playerData.player.dateOfBirthTimestamp || 0,
+              country: {
+                name: playerData.player.country?.name || "Unknown",
               },
-              goals: {
-                total: playerData.statistics[0].goals.total,
-                assists: playerData.statistics[0].goals.assists,
+              team: {
+                name: teamName,
               },
-            },
-          }));
+            };
+          });
         allPlayers.push(...teamPlayers);
       }
       setPlayers(allPlayers);
-      setUnusedPlayers(allPlayers);
       setLoading(false);
       selectRandomPlayer(allPlayers);
     } catch (error) {
@@ -137,22 +120,26 @@ export default function ExtendedEuropeanFootballQuiz() {
   };
 
   const selectRandomPlayer = (playerList: Player[]) => {
-    if (unusedPlayers.length === 0) {
-      // All players have been used, reset the unused players
-      setUnusedPlayers([...players]);
-    }
+    let selectedPlayer;
+    let attempts = 0;
+    const maxAttempts = playerList.length;
 
-    const randomIndex = Math.floor(Math.random() * unusedPlayers.length);
-    const selectedPlayer = unusedPlayers[randomIndex];
+    // Ensure the selected player has not been used already
+    do {
+      const randomIndex = Math.floor(Math.random() * playerList.length);
+      selectedPlayer = playerList[randomIndex];
+      attempts++;
+    } while (usedPlayers.has(selectedPlayer.id) && attempts < maxAttempts);
+
+    // Add player to used set and set as current player
+    setUsedPlayers((prevUsed) => new Set(prevUsed).add(selectedPlayer.id));
     setCurrentPlayer(selectedPlayer);
 
-    // Remove the selected player from unusedPlayers
-    setUnusedPlayers(unusedPlayers.filter((p) => p.id !== selectedPlayer.id));
-
     const correctAnswer = selectedPlayer.name;
-    const wrongAnswers = players
+    const wrongAnswers = playerList
       .filter((p) => p.id !== selectedPlayer.id)
       .map((p) => p.name)
+      .filter((name, index, self) => self.indexOf(name) === index)
       .sort(() => 0.5 - Math.random())
       .slice(0, 2);
 
@@ -193,11 +180,8 @@ export default function ExtendedEuropeanFootballQuiz() {
         <Card className="mx-auto w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Extended European Football Quiz</CardTitle>
-            <CardDescription className="text-xl">
-              Test your knowledge of top players from the 2022 season! This quiz
-              features players from Manchester City, Manchester United, Arsenal,
-              Chelsea, Tottenham, Barcelona, Real Madrid, Inter Milan, PSG, and
-              Bayern Munich who played at least 10 minutes in the season.
+            <CardDescription>
+              Test your knowledge of top players from top European clubs!
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -210,42 +194,17 @@ export default function ExtendedEuropeanFootballQuiz() {
             ) : currentPlayer ? (
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage
-                      src={currentPlayer.photo}
-                      alt={currentPlayer.name}
-                    />
-                    <AvatarFallback>
-                      {currentPlayer.firstname[0]}
-                      {currentPlayer.lastname[0]}
-                    </AvatarFallback>
-                  </Avatar>
                   <div>
                     <p className="text-lg font-semibold">
                       Position: {currentPlayer.position}
                     </p>
-                    <p>Age: {currentPlayer.age} years</p>
-                    <p>Height: {currentPlayer.height}</p>
-                    <p>Weight: {currentPlayer.weight}</p>
+                    <p>Jersey Number: {currentPlayer.jerseyNumber}</p>
                   </div>
                 </div>
                 <div>
-                  <p>Nationality: {currentPlayer.nationality}</p>
-                  <p>
-                    Birthplace: {currentPlayer.birth.place},{" "}
-                    {currentPlayer.birth.country}
-                  </p>
+                  <p>Nationality: {currentPlayer.country.name}</p>
+
                   <p>Club: {currentPlayer.team.name}</p>
-                </div>
-                <div>
-                  <p>
-                    Appearances: {currentPlayer.statistics.games.appearences}
-                  </p>
-                  <p>
-                    Minutes played: {currentPlayer.statistics.games.minutes}
-                  </p>
-                  <p>Goals: {currentPlayer.statistics.goals.total}</p>
-                  <p>Assists: {currentPlayer.statistics.goals.assists}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {options.map((option, index) => (

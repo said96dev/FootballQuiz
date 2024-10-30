@@ -1,8 +1,6 @@
-import FussballQuiz from "@/components/quiz";
-import { Button } from "@/components/ui/button";
-import { Camera } from "lucide-react";
+import GuessPlayerQuiz from "@/components/GuessPlayer";
 
-export default function Home() {
+export default function GuessThePlayerPage() {
   return (
     <div className="my-auto flex flex-col items-center justify-center gap-12">
       <div className="mx-auto w-full max-w-2xl text-center text-3xl font-bold tracking-wide">
@@ -14,7 +12,7 @@ export default function Home() {
           and see how many stars you can identify.
         </p>
       </div>
-      <FussballQuiz />
+      <GuessPlayerQuiz />
     </div>
   );
 }
