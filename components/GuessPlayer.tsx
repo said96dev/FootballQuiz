@@ -30,6 +30,7 @@ interface Player {
   team: {
     name: string;
   };
+  tournament: string;
 }
 
 interface ExtendedQuizProps {
