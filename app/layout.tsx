@@ -40,7 +40,7 @@ export default function RootLayout({
           <ReactQueryProvider>
             <div className="flex h-screen flex-col">
               <Navbar />
-              <div className="flex flex-grow items-center justify-center overflow-hidden">
+              <div className="flex flex-grow items-center justify-center">
                 {children}
               </div>
             </div>
