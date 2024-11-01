@@ -219,7 +219,7 @@ const WhoAreAy = ({ players = [] }: PlayerGuessingGameProps) => {
           {guesses.map((guess, index) => (
             <div
               key={index}
-              className="grid grid-cols-7 items-center gap-2 rounded-lg border p-2"
+              className="grid grid-cols-1 items-center gap-2 rounded-lg border p-2 md:grid-cols-7"
             >
               <div className="text-sm font-medium">
                 {guess?.player?.name ?? "Unknown"}
@@ -264,25 +264,7 @@ const WhoAreAy = ({ players = [] }: PlayerGuessingGameProps) => {
               >
                 {guess?.player?.position ?? "Unknown"}
               </div>
-              <div
-                className={cn(
-                  "flex h-full items-center justify-center rounded-full px-2 text-center text-sm",
-                  guess.matches.age
-                    ? "bg-green-500 text-white"
-                    : "bg-red-500 text-white",
-                )}
-              >
-                {calculateAge(guess.player.dateOfBirthTimestamp)}
-                {!guess.matches.age && (
-                  <div className="ml-1">
-                    {guess.comparisons.age === "older" ? (
-                      <ArrowDown className="h-4 w-4" />
-                    ) : (
-                      <ArrowUp className="h-4 w-4" />
-                    )}
-                  </div>
-                )}
-              </div>
+
               <div
                 className={cn(
                   "flex h-full items-center justify-center rounded-full px-2 text-center text-sm",
@@ -303,6 +285,25 @@ const WhoAreAy = ({ players = [] }: PlayerGuessingGameProps) => {
                     </div>
                   )}
                 </div>
+              </div>
+              <div
+                className={cn(
+                  "flex h-full items-center justify-center rounded-full px-2 text-center text-sm",
+                  guess.matches.age
+                    ? "bg-green-500 text-white"
+                    : "bg-red-500 text-white",
+                )}
+              >
+                {calculateAge(guess.player.dateOfBirthTimestamp)}
+                {!guess.matches.age && (
+                  <div className="ml-1">
+                    {guess.comparisons.age === "older" ? (
+                      <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUp className="h-4 w-4" />
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
