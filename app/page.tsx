@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function GuessThePlayerPage() {
-  const { data, isLoading, error } = useGetTeamData();
+  const { data, error } = useGetTeamData();
   console.log("🚀 ~ GuessThePlayerPage ~ data:", data);
 
   if (error) {
