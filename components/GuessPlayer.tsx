@@ -55,7 +55,7 @@ export default function ExtendedEuropeanFootballQuiz({
       setPlayers(data);
       selectRandomPlayer(data);
     }
-  }, [data]);
+  }, []);
 
   const selectRandomPlayer = (playerList: Player[]) => {
     if (!playerList.length) return;
