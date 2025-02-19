@@ -48,6 +48,7 @@ export default function ExtendedEuropeanFootballQuiz({
   const [shake, setShake] = useState(false);
   const [usedPlayers, setUsedPlayers] = useState<Set<number>>(new Set());
   const { toast } = useToast();
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (data.length) {
@@ -67,6 +68,7 @@ export default function ExtendedEuropeanFootballQuiz({
       const randomIndex = Math.floor(Math.random() * playerList.length);
       selectedPlayer = playerList[randomIndex];
       attempts++;
+      setIsCorrect(null);
     } while (usedPlayers.has(selectedPlayer.id) && attempts < maxAttempts);
 
     setUsedPlayers((prevUsed) => new Set(prevUsed).add(selectedPlayer.id));
@@ -88,6 +90,7 @@ export default function ExtendedEuropeanFootballQuiz({
   const handleAnswer = (selectedAnswer: string) => {
     if (currentPlayer && selectedAnswer === currentPlayer.name) {
       setScore((prevScore) => prevScore + 1);
+      setIsCorrect(true);
       setShowConfetti(true);
       toast({
         title: "Correct!",
@@ -95,7 +98,9 @@ export default function ExtendedEuropeanFootballQuiz({
         variant: "default",
       });
       setTimeout(() => setShowConfetti(false), 3000);
+      setTimeout(() => selectRandomPlayer(players), 3000);
     } else {
+      setIsCorrect(false);
       setShake(true);
       toast({
         title: "Wrong!",
@@ -104,7 +109,6 @@ export default function ExtendedEuropeanFootballQuiz({
       });
       setTimeout(() => setShake(false), 500);
     }
-    setTimeout(() => selectRandomPlayer(players), 2000);
   };
 
   return (
@@ -157,6 +161,16 @@ export default function ExtendedEuropeanFootballQuiz({
             </Button>
           </CardFooter>
         </Card>
+        {isCorrect !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className={`mt-4 text-xl ${isCorrect ? "text-green-500" : "text-red-500"}`}
+          >
+            {isCorrect ? "Correct!" : "Incorrect. Try again!"}
+          </motion.div>
+        )}
       </motion.div>
     </>
   );

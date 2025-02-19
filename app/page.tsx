@@ -40,6 +40,11 @@ export default function GuessThePlayerPage() {
               Who Are Ya?
             </Button>
           </Link>
+          <Link href="/ShardSameClub" className="text-xl font-semibold">
+            <Button variant="default" className="w-full text-lg">
+              Shared the Same Club{" "}
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
